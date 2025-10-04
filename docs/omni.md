@@ -6,17 +6,17 @@ The Omni Module is the multimodal AI agent at the heart of the Vita system, powe
 
 ## 🏗️ Architecture
 
-Архитектура Omni модуля состоит из следующих компонентов:
+The Omni module architecture consists of the following components:
 
-1. **Input Sources** - источники входных данных (текст, аудио, изображения)
-2. **Preprocessing** - предварительная обработка данных
-3. **Format Conversion** - преобразование форматов данных
-4. **Model Inference** - инференс модели Qwen3-Omni
-5. **Post-processing** - постобработка результатов
-6. **Response Generation** - генерация ответа
-7. **Action Execution** - выполнение действий
+1. **Input Sources** - sources of input data (text, audio, images)
+2. **Preprocessing** - preliminary data processing
+3. **Format Conversion** - data format conversion
+4. **Model Inference** - inference of the Qwen3-Omni model
+5. **Post-processing** - post-processing of results
+6. **Response Generation** - response generation
+7. **Action Execution** - execution of actions
 
-Данные проходят через все этапы обработки, начиная с входных источников и заканчивая выполнением действий в системе умного дома.
+Data passes through all processing stages, from input sources to the execution of actions in the smart home system.
 
 ## 🔧 API Endpoints
 

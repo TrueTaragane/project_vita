@@ -1,44 +1,9 @@
-# Vita: Гибридная архитектура умного дома с локальным ИИ
+# 🧠 Vita: Гибридная архитектура умного дома с локальным ИИ
 
-**Vita** — это локальный ИИ‑ассистент, интегрированный в умный дом. Он работает полностью оффлайн, поддерживает зрение, голос, память и автоматизацию.
+## 🎯 Цель
+Создание локальной, автономной, гибридной системы умного дома с голосовым управлением, видеоаналитикой, медиасервером, мониторингом и локальным ИИ. Поддержка разных сборок: от mini‑PC до edge‑модулей (Orange Pi, Jetson).
 
-## Структура проекта
-
-```
-project_vita/
-├── README.md
-├── README_hybrid.md
-├── docs/
-│   └── architecture.md
-├── compose/
-│   └── llama.cpp.override.yml
-├── models/
-│   └── qwen3-7b-chat-q4_k_m.gguf
-├── scripts/
-│   └── llama_run.sh
-└── .gitignore
-```
-
-## Основные компоненты
-
-- **Гибридная архитектура**: Поддержка различных конфигураций оборудования
-- **llama.cpp**: Локальный запуск LLM моделей
-- **Документация**: Полное описание архитектуры и принципов работы
-- **Docker Compose**: Конфигурации для развертывания сервисов
-
-## Начало работы
-
-1. Ознакомьтесь с [README_hybrid.md](README_hybrid.md) для понимания архитектуры
-2. Изучите [docs/architecture.md](docs/architecture.md) для деталей взаимодействия компонентов
-3. Используйте [scripts/llama_run.sh](scripts/llama_run.sh) для запуска модели
-4. Настройте [compose/llama.cpp.override.yml](compose/llama.cpp.override.yml) для Docker окружения
-
-## Принципы Vita
-
-- **Локальность**: всё работает без интернета
-- **Модульность**: легко масштабировать и адаптировать
-- **Открытость**: open‑source, документация, инструкции
-- **Доступность**: работает на бюджетных платформах
+---
 
 ## 🛠️ Поддерживаемые конфигурации
 
@@ -179,11 +144,13 @@ Omni запускается по событию и может быть адап�
 
 
 
+
+<<<<<<< HEAD
 ![Yuri's AI-Powered Docker Server Architecture]([https://github.com/TrueTaragane/smart-home-architecture/blob/main/githubusercontent.png](https://github.com/TrueTaragane/project_vita/blob/main/githubusercontent.png)?raw=true)
 
 ![Yuri's AI-Powered Docker Server Architecture]([https://github.com/TrueTaragane/smart-home-architecture/blob/main/githubusercontent.png](https://github.com/TrueTaragane/project_vita/blob/main/githubusercontent.png)?raw=true)
-
->>>>>>> 4a3eb6124076ed67992ba4e8d66b003752945d28
+![Project Vita Cover](https://github.com/TrueTaragane/project_vita/blob/main/githubusercontent.png?raw=true)
+>>>>>>> 7ca6a70eacc17ebf50620a129d0f555c8e367122
 ![Yuri's AI-Powered Docker Server Architecture](https://github.com/TrueTaragane/project_vita/blob/main/githubusercontent.png?raw=true)
 
 ## 📚 Документация
@@ -198,6 +165,8 @@ Omni запускается по событию и может быть адап�
 - [🛠️ Makefile Guide](docs/makefile_guide.md)
 =======
 ![Yuri's AI-Powered Docker Server Architecture]([https://github.com/TrueTaragane/smart-home-architecture/blob/main/githubusercontent.png](https://github.com/TrueTaragane/project_vita/blob/main/githubusercontent.png)?raw=true)
+=======
+![Project Vita Cover](https://github.com/TrueTaragane/project_vita/blob/main/githubusercontent.png?raw=true)
+>>>>>>> 7ca6a70eacc17ebf50620a129d0f555c8e367122
 
->>>>>>> 4a3eb6124076ed67992ba4e8d66b003752945d28
 

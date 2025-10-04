@@ -1,0 +1,10 @@
+# Qwen3 7B Chat Model (Quantized)
+
+This is a placeholder for the Qwen3 7B Chat model quantized to Q4_K_M format.
+The actual model file should be downloaded separately.
+
+Model details:
+- Name: Qwen3 7B Chat
+- Quantization: Q4_K_M
+- Size: ~4.2 GB
+- Parameters: 7 billion

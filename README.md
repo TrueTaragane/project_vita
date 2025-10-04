@@ -102,9 +102,7 @@ Omni запускается по событию и может быть адап�
 
 ## 🧠 Принцип
 
-![Yuri's AI-Powered Docker Server Architecture]([https://github.com/TrueTaragane/smart-home-architecture/blob/main/githubusercontent.png](https://github.com/TrueTaragane/project_vita/blob/main/githubusercontent.png)?raw=true)
-![Project Vita Cover](https://github.com/TrueTaragane/project_vita/blob/main/githubusercontent.png?raw=true)
->>>>>>> 7ca6a70eacc17ebf50620a129d0f555c8e367122
+
 Максимальная автономность, локальный ИИ, визуальное управление, защита данных, гибкость и масштабируемость.
 ---
 
@@ -121,12 +119,9 @@ Omni запускается по событию и может быть адап�
 - [⚠️ Ограничения и caveats](docs/limitations.md) — технические и архитектурные нюансы
 
 ---
-
-![Yuri's AI-Powered Docker Server Architecture](https://github.com/TrueTaragane/project_vita/blob/main/githubusercontent.png?raw=true)
-=======
-![Yuri's AI-Powered Docker Server Architecture]([https://github.com/TrueTaragane/smart-home-architecture/blob/main/githubusercontent.png](https://github.com/TrueTaragane/project_vita/blob/main/githubusercontent.png)?raw=true)
-=======
 ![Project Vita Cover](https://github.com/TrueTaragane/project_vita/blob/main/githubusercontent.png?raw=true)
->>>>>>> 7ca6a70eacc17ebf50620a129d0f555c8e367122
+
+
+
 
 

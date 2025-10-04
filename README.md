@@ -144,5 +144,6 @@ Omni запускается по событию и может быть адап�
 
 
 
-!(https://github.com/TrueTaragane/smart-home-architecture/blob/main/githubusercontent.png?raw=true)
 
+![Project Vita Cover](https://github.com/TrueTaragane/project_vita/blob/main/githubusercontent.png?raw=true)
+[Смотреть обложку](https://github.com/TrueTaragane/project_vita/blob/main/githubusercontent.png?raw=true)

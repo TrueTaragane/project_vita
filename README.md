@@ -102,12 +102,12 @@ Omni запускается по событию и может быть адап�
 
 ## 🧠 Принцип
 
-Максимальная автономность, локальный ИИ, визуальное управление, защита данных, гибкость и масштабируемость.
----
-
 ![Yuri's AI-Powered Docker Server Architecture]([https://github.com/TrueTaragane/smart-home-architecture/blob/main/githubusercontent.png](https://github.com/TrueTaragane/project_vita/blob/main/githubusercontent.png)?raw=true)
 ![Project Vita Cover](https://github.com/TrueTaragane/project_vita/blob/main/githubusercontent.png?raw=true)
 >>>>>>> 7ca6a70eacc17ebf50620a129d0f555c8e367122
+Максимальная автономность, локальный ИИ, визуальное управление, защита данных, гибкость и масштабируемость.
+---
+
 ## 📚 Документация проекта Vita
 
 - [🧠 Архитектура Vita](docs/architecture.md) — общая схема, роли, взаимодействие модулей  

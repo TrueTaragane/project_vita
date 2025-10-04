@@ -1,0 +1,181 @@
+version: "3.9"
+
+services:
+  # Core AI Services
+  whisper:
+    image: ghcr.io/guillaumekln/faster-whisper:latest
+    container_name: whisper-stt
+    restart: unless-stopped
+    networks: [ai-stack]
+    volumes:
+      - ${MODEL_WHISPER}:/model
+    command: --model /model --device cpu --compute_type int8
+
+  qwen3:
+    image: vllm/vllm-openai:latest
+    container_name: qwen3-llm
+    restart: unless-stopped
+    networks: [ai-stack]
+    ports:
+      - "${PORT_QWEN}:8000"
+    volumes:
+      - ${MODEL_QWEN3}:/models
+    command: >
+      --model /models
+      --dtype auto
+      --quantization awq
+      --max-model-len 8192
+      --gpu-memory-utilization 0.88
+      --tensor-parallel-size 1
+      --port 8000
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  piper:
+    image: rhasspy/piper:latest
+    container_name: piper-tts
+    restart: unless-stopped
+    networks: [ai-stack]
+    ports:
+      - "${PORT_PIPER}:5002"
+    volumes:
+      - ./tts/piper:/voices
+    command: --voice /voices/ru_RU-irina-medium.onnx --port 5002
+
+  qwen3-omni:
+    build:
+      context: ./omni
+      dockerfile: Dockerfile.qwen3-omni
+    container_name: qwen3-omni
+    restart: unless-stopped
+    networks: [ai-stack]
+    ports:
+      - "${PORT_OMNI}:11437"
+    volumes:
+      - ${MODEL_OMNI}:/app/model
+      - ./inputs:/app/inputs
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:11437/status"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Home Automation
+  home-assistant:
+    image: homeassistant/home-assistant:latest
+    container_name: home-assistant
+    restart: unless-stopped
+    networks: [ai-stack]
+    ports:
+      - "${PORT_HOME_ASSISTANT}:8123"
+    volumes:
+      - ./home-assistant/config:/config
+      - /etc/localtime:/etc/localtime:ro
+    privileged: true
+    depends_on:
+      - mosquitto
+
+  # Computer Vision
+  frigate:
+    image: ghcr.io/blakeblackshear/frigate:stable
+    container_name: frigate
+    restart: unless-stopped
+    networks: [ai-stack]
+    ports:
+      - "${PORT_FRIGATE}:5000"
+    volumes:
+      - ./frigate/config.yml:/config/config.yml:ro
+      - ./frigate/storage:/media/frigate
+      - /etc/localtime:/etc/localtime:ro
+    privileged: true
+
+  # Media Server
+  jellyfin:
+    image: jellyfin/jellyfin:latest
+    container_name: jellyfin
+    restart: unless-stopped
+    networks: [ai-stack]
+    ports:
+      - "8096:8096"
+      - "8920:8920"
+    volumes:
+      - ./jellyfin/config:/config
+      - ./jellyfin/cache:/cache
+      - ./media:/media:ro
+    devices:
+      - /dev/dri:/dev/dri
+
+  # Monitoring
+  telegraf:
+    image: telegraf:latest
+    container_name: telegraf
+    restart: unless-stopped
+    networks: [ai-stack]
+    volumes:
+      - ./telegraf/telegraf.conf:/etc/telegraf/telegraf.conf:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+
+  influxdb:
+    image: influxdb:latest
+    container_name: influxdb
+    restart: unless-stopped
+    networks: [ai-stack]
+    ports:
+      - "8086:8086"
+    volumes:
+      - ./influxdb/data:/var/lib/influxdb
+    environment:
+      - DOCKER_INFLUXDB_INIT_MODE=setup
+      - DOCKER_INFLUXDB_INIT_USERNAME=admin
+      - DOCKER_INFLUXDB_INIT_PASSWORD=${INFLUXDB_PASSWORD}
+      - DOCKER_INFLUXDB_INIT_ORG=vita
+      - DOCKER_INFLUXDB_INIT_BUCKET=metrics
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    restart: unless-stopped
+    networks: [ai-stack]
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./grafana/data:/var/lib/grafana
+    depends_on:
+      - influxdb
+
+  # MQTT Broker
+  mosquitto:
+    image: eclipse-mosquitto:latest
+    container_name: mosquitto
+    restart: unless-stopped
+    networks: [ai-stack]
+    ports:
+      - "1883:1883"
+      - "9001:9001"
+    volumes:
+      - ./mosquitto/config:/mosquitto/config
+      - ./mosquitto/data:/mosquitto/data
+      - ./mosquitto/log:/mosquitto/log
+
+  # File Sharing
+  samba:
+    image: dperson/samba:latest
+    container_name: samba
+    restart: unless-stopped
+    networks: [ai-stack]
+    ports:
+      - "139:139"
+      - "445:445"
+    volumes:
+      - ./shared:/shared
+    environment:
+      - TZ=Europe/Moscow
+    command: '-s "shared;/shared;yes;no;yes" -u "vita;${SAMBA_PASSWORD}"'
+
+networks:
+  ai-stack:
+    driver: bridge
+    internal: false

@@ -105,64 +105,24 @@ Omni запускается по событию и может быть адап�
 Максимальная автономность, локальный ИИ, визуальное управление, защита данных, гибкость и масштабируемость.
 ---
 
-## 📚 Дополнительные материалы
-
-- [📝 Limitations & Caveats](docs/limitations.md)
-- [🔮 Roadmap & Future Plans](docs/roadmap.md)
-- [📜 Rule Engine Specification](docs/automation-spec.md)
-- [🗃️ Automation DB Schema](docs/automation-db-schema.md)
-- [🧪 Load Testing Plan](docs/automation-loadtest.md)
-- [🧠 Omni Module Documentation](docs/omni-module.md)
-- [🎙️ Voice Assistant](docs/voice-assistant.md)
-- [🛠️ Makefile Guide](docs/makefile-guide.md)
-
-- ### 🧠 Сравнение моделей Qwen3‑Omni и Qwen2.5‑Omni
-
-- ВНИМАНИЕ!
-  🔗 Qwen3‑Omni‑14B (AWQ) — доступна через vLLM и ModelScope  
-📁 Модель загружается вручную: `Qwen/Qwen3-Omni-14B-AWQ`  
-⚠️ Не опубликована на Hugging Face, используется в локальных сборках
-
-
-
-| Характеристика             | Qwen3‑Omni‑14B                                                                 | Qwen2.5‑Omni (72B)                                                                 |
-|----------------------------|--------------------------------------------------------------------------------|------------------------------------------------------------------------------------|
-| Размер модели              | 14B                                                                            | 72B                                                                                |
-| Мультимодальность          | ✅ Текст, изображение, аудио                                                   | ✅ Текст, изображение, аудио                                                       |
-| Поддержка аудио            | ✅                                                                              | ✅                                                                                 |
-| Поддержка изображений      | ✅                                                                              | ✅                                                                                 |
-| Совместимость              | [vLLM](https://github.com/vllm-project/vllm), [AWQ](https://github.com/mit-han-lab/awq), Docker | [HuggingFace Transformers](https://github.com/QwenLM/Qwen2.5-Omni)                |
-| Запуск на RTX 4090         | ✅ Полностью совместима                                                       | ⚠️ Требуется 2× RTX 4090 или A100                                                  |
-| VRAM‑потребление           | ~22–24 ГБ                                                                      | ~48–80 ГБ                                                                          |
-| Скорость отклика           | ⚡ Быстрая (AWQ + vLLM)                                                         | 🧠 Медленнее, требует больше ресурсов                                              |
-| Подходит для локального ИИ | ✅ Да                                                                          | ⚠️ Только при наличии дата‑центра или нескольких GPU                               |
-| Статус                     | Проверена в продакшн‑стеке                                                    | Новая, экспериментальная                                                          |
-
-> 💡 **Почему выбрана Qwen3‑Omni**:  
-> Она идеально подходит для домашнего сервера с одной RTX 4090, полностью совместима с vLLM и Docker, и уже интегрирована в стек.  
-> Qwen2.5‑Omni — это следующий шаг для масштабирования, но требует гораздо больше ресурсов.
-
-
-
-
-<<<<<<< HEAD
-![Yuri's AI-Powered Docker Server Architecture]([https://github.com/TrueTaragane/smart-home-architecture/blob/main/githubusercontent.png](https://github.com/TrueTaragane/project_vita/blob/main/githubusercontent.png)?raw=true)
-
 ![Yuri's AI-Powered Docker Server Architecture]([https://github.com/TrueTaragane/smart-home-architecture/blob/main/githubusercontent.png](https://github.com/TrueTaragane/project_vita/blob/main/githubusercontent.png)?raw=true)
 ![Project Vita Cover](https://github.com/TrueTaragane/project_vita/blob/main/githubusercontent.png?raw=true)
 >>>>>>> 7ca6a70eacc17ebf50620a129d0f555c8e367122
+## 📚 Документация проекта Vita
+
+- [🧠 Архитектура Vita](docs/architecture.md) — общая схема, роли, взаимодействие модулей  
+- [📜 Спецификация Rule Engine](docs/rule_engine.md) — логика правил, API, примеры  
+- [🗃️ Схема базы автоматизации](docs/db_schema.md) — структура данных, ER‑диаграмма  
+- [🧪 План нагрузочного тестирования](docs/load_test_plan.md) — сценарии, метрики, инструменты  
+- [🔮 Дорожная карта и планы](docs/roadmap.md) — квартальные цели, будущие модули  
+- [🧠 Документация Omni‑модуля](docs/omni.md) — универсальный интерфейс, функции, примеры  
+- [🎙️ Голосовой ассистент](docs/voice_assistant.md) — пайплайн: Whisper → LLM → TTS  
+- [🛠️ Руководство по Makefile](docs/makefile_guide.md) — цели, параметры, запуск  
+- [⚠️ Ограничения и caveats](docs/limitations.md) — технические и архитектурные нюансы
+
+---
+
 ![Yuri's AI-Powered Docker Server Architecture](https://github.com/TrueTaragane/project_vita/blob/main/githubusercontent.png?raw=true)
-
-## 📚 Документация
-
-- [Limitations & Caveats](docs/limitations.md)
-- [🔮 Roadmap & Future Plans](docs/roadmap.md)
-- [📜 Rule Engine Specification](docs/rule_engine.md)
-- [🗃️ Automation DB Schema](docs/db_schema.md)
-- [🧪 Load Testing Plan](docs/load_test_plan.md)
-- [🧠 Omni Module Documentation](docs/omni.md)
-- [🎙️ Voice Assistant](docs/voice_assistant.md)
-- [🛠️ Makefile Guide](docs/makefile_guide.md)
 =======
 ![Yuri's AI-Powered Docker Server Architecture]([https://github.com/TrueTaragane/smart-home-architecture/blob/main/githubusercontent.png](https://github.com/TrueTaragane/project_vita/blob/main/githubusercontent.png)?raw=true)
 =======

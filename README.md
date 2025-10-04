@@ -179,5 +179,5 @@ Omni запускается по событию и может быть адап�
 
 
 
-![Yuri's AI-Powered Docker Server Architecture](https://github.com/TrueTaragane/smart-home-architecture/blob/main/githubusercontent.png?raw=true)
+![Yuri's AI-Powered Docker Server Architecture](https://github.com/TrueTaragane/project_vita/blob/main/githubusercontent.png?raw=true)
 

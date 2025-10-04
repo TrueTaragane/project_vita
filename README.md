@@ -181,8 +181,21 @@ Omni запускается по событию и может быть адап�
 
 ![Yuri's AI-Powered Docker Server Architecture]([https://github.com/TrueTaragane/smart-home-architecture/blob/main/githubusercontent.png](https://github.com/TrueTaragane/project_vita/blob/main/githubusercontent.png)?raw=true)
 
+![Yuri's AI-Powered Docker Server Architecture]([https://github.com/TrueTaragane/smart-home-architecture/blob/main/githubusercontent.png](https://github.com/TrueTaragane/project_vita/blob/main/githubusercontent.png)?raw=true)
+
 >>>>>>> 4a3eb6124076ed67992ba4e8d66b003752945d28
 ![Yuri's AI-Powered Docker Server Architecture](https://github.com/TrueTaragane/project_vita/blob/main/githubusercontent.png?raw=true)
+
+## 📚 Документация
+
+- [Limitations & Caveats](docs/limitations.md)
+- [🔮 Roadmap & Future Plans](docs/roadmap.md)
+- [📜 Rule Engine Specification](docs/rule_engine.md)
+- [🗃️ Automation DB Schema](docs/db_schema.md)
+- [🧪 Load Testing Plan](docs/load_test_plan.md)
+- [🧠 Omni Module Documentation](docs/omni.md)
+- [🎙️ Voice Assistant](docs/voice_assistant.md)
+- [🛠️ Makefile Guide](docs/makefile_guide.md)
 =======
 ![Yuri's AI-Powered Docker Server Architecture]([https://github.com/TrueTaragane/smart-home-architecture/blob/main/githubusercontent.png](https://github.com/TrueTaragane/project_vita/blob/main/githubusercontent.png)?raw=true)
 

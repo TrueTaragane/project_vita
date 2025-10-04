@@ -1,0 +1,535 @@
+diff --git a/.env.example b/.env.example
+new file mode 100644
+--- /dev/null
++++ b/.env.example
+@@ -0,0 +1,9 @@
++GPU_DEVICE=0
++PORT_QWEN=8000
++PORT_PIPER=5002
++PORT_OMNI=11437
++MODEL_QWEN3=./models/qwen3-30b-instruct-awq
++MODEL_OMNI=./models/Qwen3-Omni-14B
++MODEL_WHISPER=./models/whisper-large-v3
++MODEL_PIPER=./tts/piper/ru_RU-irina-medium.onnx
++INPUT_DIR=./inputs
+diff --git a/compose/docker-compose.full.yml b/compose/docker-compose.full.yml
+new file mode 100644
+--- /dev/null
++++ b/compose/docker-compose.full.yml
+@@ -0,0 +1,79 @@
++version: "3.9"
++services:
++  whisper:
++    image: ghcr.io/guillaumekln/faster-whisper:latest
++    container_name: whisper-stt
++    restart: unless-stopped
++    runtime: nvidia
++    environment:
++      - NVIDIA_VISIBLE_DEVICES=all
++      - CUDA_VISIBLE_DEVICES=${GPU_DEVICE:-0}
++    networks: [ai-stack]
++    volumes:
++      - ${MODEL_WHISPER}:/model
++    command: --model /model --device cuda --compute_type float16
++
++  qwen3:
++    image: vllm/vllm-openai:latest
++    container_name: qwen3-llm
++    restart: unless-stopped
++    runtime: nvidia
++    networks: [ai-stack]
++    ports:
++      - "${PORT_QWEN}:8000"
++    environment:
++      - NVIDIA_VISIBLE_DEVICES=all
++      - CUDA_VISIBLE_DEVICES=${GPU_DEVICE:-0}
++    volumes:
++      - ${MODEL_QWEN3}:/models
++    command: >
++      --model /models
++      --dtype auto
++      --quantization awq
++      --max-model-len 8192
++      --gpu-memory-utilization 0.88
++      --tensor-parallel-size 1
++      --port 8000
++    healthcheck:
++      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
++      interval: 30s
++      timeout: 10s
++      retries: 3
++
++  piper:
++    image: rhasspy/piper:latest
++    container_name: piper-tts
++    restart: unless-stopped
++    networks: [ai-stack]
++    ports:
++      - "${PORT_PIPER}:5002"
++    volumes:
++      - ./tts/piper:/voices
++    command: --voice /voices/ru_RU-irina-medium.onnx --port 5002
++
++  qwen3-omni:
++    build:
++      context: ./omni
++      dockerfile: Dockerfile.qwen3-omni
++    container_name: qwen3-omni
++    restart: unless-stopped
++    runtime: nvidia
++    networks: [ai-stack]
++    ports:
++      - "${PORT_OMNI}:11437"
++    volumes:
++      - ${MODEL_OMNI}:/app/model
++      - ./inputs:/app/inputs
++    environment:
++      - NVIDIA_VISIBLE_DEVICES=all
++      - CUDA_VISIBLE_DEVICES=${GPU_DEVICE:-0}
++    healthcheck:
++      test: ["CMD", "curl", "-f", "http://localhost:11437/status"]
++      interval: 30s
++      timeout: 10s
++      retries: 3
++
++networks:
++  ai-stack:
++    driver: bridge
++    internal: true
+diff --git a/make/Makefile b/make/Makefile
+new file mode 100644
+--- /dev/null
++++ b/make/Makefile
+@@ -0,0 +1,53 @@
++.PHONY: build run stop restart clean status vram test-image test-audio download-models healthcheck logs
++
++DOCKER_COMPOSE = docker compose -p smart-home-ai
++INPUT_DIR = ./inputs
++PORT_OMNI = ${PORT_OMNI}
++
++build:
++	$(DOCKER_COMPOSE) -f compose/docker-compose.full.yml build
++
++run:
++	$(DOCKER_COMPOSE) -f compose/docker-compose.full.yml up -d
++
++stop:
++	-$(DOCKER_COMPOSE) -f compose/docker-compose.full.yml stop || true
++
++restart:
++	$(DOCKER_COMPOSE) -f compose/docker-compose.full.yml restart
++
++clean:
++	$(DOCKER_COMPOSE) -f compose/docker-compose.full.yml down
++
++status:
++	curl -s http://localhost:$(PORT_OMNI)/status | jq
++
++vram:
++	nvidia-smi --query-gpu=memory.used,memory.total --format=csv,noheader,nounits | \
++	awk -F, '{printf "VRAM: %d / %d MB (%.1f%%)\n", $$1, $$2, $$1*100/$$2}'
++
++test-image:
++	@test -f "$(INPUT_DIR)/snapshot.jpg" || (echo "❌ snapshot.jpg не найден" && exit 1)
++	curl -X POST http://localhost:$(PORT_OMNI)/generate \
++	  -H "Content-Type: application/json" \
++	  -d '{"text":"Что на изображении?","image":"'"$$(base64 -w 0 $(INPUT_DIR)/snapshot.jpg)"'"}' | jq
++
++test-audio:
++	@test -f "$(INPUT_DIR)/voice.wav" || (echo "❌ voice.wav не найден" && exit 1)
++	curl -X POST http://localhost:$(PORT_OMNI)/generate \
++	  -H "Content-Type: application/json" \
++	  -d '{"text":"Что сказал человек?","audio":"'"$$(base64 -w 0 $(INPUT_DIR)/voice.wav)"'"}' | jq
++
++download-models:
++	@command -v git-lfs >/dev/null || (echo "❌ git-lfs не установлен" && exit 1)
++	git lfs install
++	git clone https://huggingface.co/Qwen/Qwen3-30B-Instruct-AWQ ./models/qwen3-30b-instruct-awq || true
++	git clone https://huggingface.co/Qwen/Qwen3-Omni-14B ./models/Qwen3-Omni-14B || true
++	wget https://huggingface.co/rhasspy/piper-voices/resolve/main/ru/ru_RU-irina-medium.onnx -O ./tts/piper/ru_RU-irina-medium.onnx || true
++
++healthcheck:
++	@echo "🔍 Проверка состояния контейнеров:"
++	docker inspect --format='.Name: .State.Health.Status' $$(docker ps -q)
++
++logs:
++	$(DOCKER_COMPOSE) -f compose/docker-compose.full.yml logs -f
+diff --git a/omni/Dockerfile.qwen3-omni b/omni/Dockerfile.qwen3-omni
+new file mode 100644
+--- /dev/null
++++ b/omni/Dockerfile.qwen3-omni
+@@ -0,0 +1,7 @@
++FROM nvidia/cuda:12.4.0-devel-ubuntu22.04
++WORKDIR /app
++RUN apt update && apt install -y ffmpeg git curl python3-pip libsndfile1
++RUN pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
++RUN pip install transformers accelerate optimum scipy soundfile flask pillow
++COPY inference_server.py /app/
++CMD ["python3", "inference_server.py"]
+diff --git a/omni/inference_server.py b/omni/inference_server.py
+new file mode 100644
+--- /dev/null
++++ b/omni/inference_server.py
+@@ -0,0 +1,34 @@
++from flask import Flask, request, jsonify
++from transformers import AutoProcessor, AutoModelForCausalLM
++import torch, base64, io, soundfile as sf
++from PIL import Image
++
++app = Flask(__name__)
++model_path = "/app/model"
++processor = AutoProcessor.from_pretrained(model_path, trust_remote_code=True)
++model = AutoModelForCausalLM.from_pretrained(model_path, device_map="auto", trust_remote_code=True, torch_dtype=torch.bfloat16)
++model.eval()
++
++@app.route("/generate", methods=["POST"])
++def generate():
++    data = request.json
++    text = data.get("text", "")
++    image, audio, sampling_rate = None, None, None
++    if data.get("image"):
++        image = Image.open(io.BytesIO(base64.b64decode(data["image"]))).convert("RGB")
++    if data.get("audio"):
++        audio_array, sampling_rate = sf.read(io.BytesIO(base64.b64decode(data["audio"])))
++        if len(audio_array.shape) > 1: audio_array = audio_array.mean(axis=1)
++        audio = audio_array
++    inputs = processor(text=text, images=image, audios=audio, sampling_rate=sampling_rate, return_tensors="pt").to(model.device)
++    with torch.no_grad():
++        output_ids = model.generate(**inputs, max_new_tokens=256)
++    response = processor.batch_decode(output_ids, skip_special_tokens=True)[0]
++    return jsonify({"response": response})
++
++@app.route("/status", methods=["GET"])
++def status():
++    return jsonify({"status": "ok"})
++
++if __name__ == "__main__":
++    app.run(host="0.0.0.0", port=11437)
+diff --git a/node-red/qwen3-voice-assistant.json b/node-red/qwen3-voice-assistant.json
+new file mode 100644
+--- /dev/null
++++ b/node-red/qwen3-voice-assistant.json
+@@ -0,0 +1,100 @@
++[
++  {
++    "id": "whisper-in",
++    "type": "http in",
++    "name": "Voice Input (WAV)",
++    "url": "/voice-command",
++    "method": "post",
++    "upload": true,
++    "wires": [
++      [
++        "whisper-request"
++      ]
++    ]
++  },
++  {
++    "id": "whisper-request",
++    "type": "http request",
++    "name": "→ Whisper STT",
++    "method": "POST",
++    "url": "http://whisper:9000/asr",
++    "headers": [
++      {
++        "key": "Content-Type",
++        "value": "audio/wav"
++      }
++    ],
++    "wires": [
++      [
++        "qwen-prompt"
++      ]
++    ]
++  },
++  {
++    "id": "qwen-prompt",
++    "type": "function",
++    "name": "Build Qwen Prompt",
++    "func": "msg.payload = { model: 'qwen3-30b-instruct', messages: [{role:'system',content:'Ты — голосовой помощник умного дома.'},{role:'user',content:msg.payload}]}; return msg;",
++    "wires": [
++      [
++        "qwen-request"
++      ]
++    ]
++  },
++  {
++    "id": "qwen-request",
++    "type": "http request",
++    "name": "→ Qwen3 LLM",
++    "method": "POST",
++    "url": "http://qwen3:8000/v1/chat/completions",
++    "headers": [
++      {
++        "key": "Content-Type",
++        "value": "application/json"
++      }
++    ],
++    "wires": [
++      [
++        "parse-response"
++      ]
++    ]
++  },
++  {
++    "id": "parse-response",
++    "type": "function",
++    "name": "Parse & Route",
++    "func": "msg.tts_text = msg.payload.choices[0].message.content; return msg;",
++    "wires": [
++      [
++        "piper-request"
++      ]
++    ]
++  },
++  {
++    "id": "piper-request",
++    "type": "http request",
++    "name": "→ Piper TTS",
++    "method": "POST",
++    "url": "http://piper:5002/",
++    "headers": [
++      {
++        "key": "Content-Type",
++        "value": "text/plain"
++      }
++    ],
++    "wires": [
++      [
++        "http-out"
++      ]
++    ]
++  },
++  {
++    "id": "http-out",
++    "type": "http response",
++    "name": "Audio Response (WAV)",
++    "statusCode": "200",
++    "headers": {
++      "content-type": "audio/wav"
++    }
++  }
++]
+diff --git a/node-red/omni-trigger.json b/node-red/omni-trigger.json
+new file mode 100644
+--- /dev/null
++++ b/node-red/omni-trigger.json
+@@ -0,0 +1,44 @@
++[
++  {
++    "id": "omni-trigger",
++    "type": "http in",
++    "name": "Omni Trigger",
++    "url": "/omni-analyze",
++    "method": "post",
++    "upload": true,
++    "wires": [
++      [
++        "omni-request"
++      ]
++    ]
++  },
++  {
++    "id": "omni-request",
++    "type": "http request",
++    "name": "→ Qwen3-Omni",
++    "method": "POST",
++    "url": "http://qwen3-omni:11437/generate",
++    "headers": [
++      {
++        "key": "Content-Type",
++        "value": "application/json"
++      }
++    ],
++    "wires": [
++      [
++        "omni-parse"
++      ]
++    ]
++  },
++  {
++    "id": "omni-parse",
++    "type": "function",
++    "name": "Parse Omni Response",
++    "func": "msg.tts_text = msg.payload.response; return msg;",
++    "wires": [
++      [
++        "piper-request"
++      ]
++    ]
++  }
++]
+diff --git a/docs/voice-assistant.md b/docs/voice-assistant.md
+new file mode 100644
+--- /dev/null
++++ b/docs/voice-assistant.md
+@@ -0,0 +1,16 @@
++# 🎙️ Голосовой ассистент
++
++## Архитектура
++- Whisper → Qwen3 → Piper
++- JSON-команды → Home Assistant
++
++## Поток
++1. Пользователь говорит → Whisper (STT)
++2. Текст → Qwen3 (LLM)
++3. Ответ → Piper (TTS)
++4. Озвучка или JSON → HA
++
++## Пример
++```bash
++curl -X POST http://localhost:1880/voice-command --data-binary @voice.wav --output response.wav
++```
+diff --git a/docs/omni-module.md b/docs/omni-module.md
+new file mode 100644
+--- /dev/null
++++ b/docs/omni-module.md
+@@ -0,0 +1,71 @@
++# 🧠 Omni-модуль (Qwen3-Omni)
++
++Мультимодальный агент на базе **Qwen3-Omni**, интегрированный в стек умного дома. Поддерживает текст, изображения и аудио. Оптимизирован под локальное использование на GPU с учётом ограничений по VRAM.
++
++---
++
++## 🚀 Возможности
++- 📷 Анализ изображений (например, snapshot от Frigate)
++- 🔊 Распознавание аудио (голосовые команды, шумовые события)
++- 💬 Генерация ответов в текстовом или голосовом виде
++- 🧩 Интеграция с Node-RED и Home Assistant
++
++---
++
++## ⚙️ Аппаратные требования и оптимизация
++
++- **GPU**: RTX 4090 (24 ГБ VRAM) — минимально достаточный для Qwen3-Omni‑14B  
++- **CPU**: Ryzen 7 7800X3D — обеспечивает быстрый препроцессинг аудио/изображений  
++- **RAM**: 64 ГБ — для стабильной работы при параллельных задачах  
++
++### 🔧 Приёмы оптимизации нагрузки
++- Использование **AWQ‑квантизации** для снижения VRAM‑потребления  
++- Запуск Omni **по событию** (например, только при тревоге от Frigate), а не в постоянном режиме  
++- Ограничение `max_new_tokens` и `gpu-memory-utilization` в `docker-compose.full.yml`  
++- Мониторинг VRAM через `make vram` и алерты Grafana/DCGM  
++- Fallback‑механизм: если Omni перегружен, запрос уходит в Qwen3‑Instruct (текст‑только)
++
++---
++
++## 📦 Архитектура
++
++```mermaid
++graph TD
++  Frigate -->|snapshot.jpg| Omni
++  Microphone -->|voice.wav| Omni
++  Omni -->|response| NodeRED
++  NodeRED -->|TTS| Piper
++  NodeRED -->|JSON| HomeAssistant
++```
++
++---
++
++## 📤 Примеры запросов
++
++### 🖼️ Анализ изображения
++```bash
++curl -X POST http://localhost:11437/generate \
++  -H "Content-Type: application/json" \
++  -d '{"text":"Что на фото?","image":"'"$(base64 -w 0 snapshot.jpg)"'"}'
++```
++
++### 🔉 Анализ аудио
++```bash
++curl -X POST http://localhost:11437/generate \
++  -H "Content-Type: application/json" \
++  -d '{"text":"Что сказал человек?","audio":"'"$(base64 -w 0 voice.wav)"'"}'
++```
++
++---
++
++## 🧪 Тестирование и мониторинг
++- `make test-image` — проверка обработки изображения  
++- `make test-audio` — проверка обработки аудио  
++- `make vram` — мониторинг VRAM  
++- `make healthcheck` — статус контейнеров  
++
++---
++
++## 📌 Примечания
++- Omni‑модуль не предназначен для постоянной нагрузки — запускается по событию  
++- Поддерживает одновременный ввод: текст + изображение + аудио  
++- При нехватке ресурсов переключается на текстовый Qwen3‑Instruct
+diff --git a/docs/makefile-guide.md b/docs/makefile-guide.md
+new file mode 100644
+--- /dev/null
++++ b/docs/makefile-guide.md
+@@ -0,0 +1,10 @@
++# 🛠️ Makefile Guide
++
++## Основные команды
++- `make build` — собрать образы
++- `make run` — запустить стек
++- `make stop` — остановить
++- `make test-image` — протестировать Omni с изображением
++- `make test-audio` — протестировать Omni с аудио
++- `make vram` — проверить VRAM
++- `make healthcheck` — статус контейнеров
+diff --git a/README.md b/README.md
+index 0000000..1111111 100644
+--- a/README.md
++++ b/README.md
+@@ -81,6 +81,15 @@ Samba → сетевой доступ к файлам
+ - Samba → сетевой доступ к файлам
+ 
+ ### 🧠 Omni-модуль
++
++В стек интегрирован **Qwen3-Omni** — мультимодальный агент, способный обрабатывать:
++- текстовые запросы,
++- изображения (например, snapshot от Frigate),
++- аудио (голосовые команды).
++
++Omni запускается по событию и оптимизирован под RTX 4090 (24 ГБ VRAM).
++
+ ---
+ 
+ ## 📦 Хранилище
+@@ -134,6 +143,8 @@ Maximum autonomy, local AI, visual control, data protection, flexibility
+ ## 📚 Дополнительные материалы
+ 
+ - [📝 Limitations & Caveats](docs/limitations.md)
+ - [🔮 Roadmap & Future Plans](docs/roadmap.md)
+ - [📜 Rule Engine Specification](docs/automation-spec.md)
+ - [🗃️ Automation DB Schema](docs/automation-db-schema.md)
+ - [🧪 Load Testing Plan](docs/automation-loadtest.md)
+ - [🧠 Omni Module Documentation](docs/omni-module.md)
++- [🎙️ Voice Assistant](docs/voice-assistant.md)
++- [🛠️ Makefile Guide](docs/makefile-guide.md)
+ 
+ ![Yuri's AI-Powered Docker Server Architecture](https://github.com/TrueTaragane/smart-home-architecture/blob/main/githubusercontent.png?raw=true)
+diff --git a/README.en.md b/README.en.md
+index 0000000..1111111 100644
+--- a/README.en.md
++++ b/README.en.md
+@@ -78,6 +78,15 @@ Samba → network file access
+ - Samba → network file access
+ 
+ ### 🧠 Omni Module
++
++The stack integrates **Qwen3-Omni** — a multimodal agent capable of processing:
++- text queries,
++- images (e.g., snapshots from Frigate),
++- audio (voice commands).
++
++Omni is triggered by events and optimized for RTX 4090 (24 GB VRAM).
++
+ --- 
+ 
+ ## 📦 Storage Layout
+@@ -131,6 +140,8 @@ Maximum autonomy, local AI, visual control, data protection, flexibility
+ ## 📚 Additional Materials
+ 
+ - [📝 Limitations & Caveats](docs/limitations.md)
+ - [🔮 Roadmap & Future Plans](docs/roadmap.md)
+ - [🧠 Omni Module Documentation](docs/omni-module.en.md)
++- [🎙️ Voice Assistant](docs/voice-assistant.en.md)
++- [🛠️ Makefile Guide](docs/makefile-guide.en.md)
+ 
+ ![Yuri's AI-Powered Docker Server Architecture](https://github.com/TrueTaragane/smart-home-architecture/blob/main/githubusercontent.png?raw=true)

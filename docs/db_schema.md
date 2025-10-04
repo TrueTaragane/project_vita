@@ -116,7 +116,7 @@ CREATE INDEX idx_events_processed ON Events(processed);
 CREATE INDEX idx_rules_enabled ON Rules(enabled);
 ```
 
-## 🔄 Triggers
+## 🔁 Triggers
 
 ```sql
 CREATE TRIGGER update_device_last_seen

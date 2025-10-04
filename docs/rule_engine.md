@@ -6,7 +6,7 @@ The Vita Rule Engine is a flexible automation system that allows users to create
 
 ## 🏗️ Architecture
 
-```
+```mermaid
 [User Input] → [Rule Parser] → [Condition Evaluator] → [Action Executor] → [Feedback Loop]
 ```
 

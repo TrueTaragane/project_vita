@@ -6,7 +6,7 @@ The Omni Module is the multimodal AI agent at the heart of the Vita system, powe
 
 ## 🏗️ Architecture
 
-```
+```mermaid
 [Input Sources] → [Preprocessing] → [Qwen3-Omni] → [Response Generation] → [Output Actions]
        |              |                |                |                  |
    Text/Audio/Image   |                |                |                  |
@@ -19,7 +19,7 @@ The Omni Module is the multimodal AI agent at the heart of the Vita system, powe
 ## 🔧 API Endpoints
 
 ### Text Processing
-```
+```json
 POST /api/omni/text
 Content-Type: application/json
 
@@ -38,7 +38,7 @@ Response:
 ```
 
 ### Image Processing
-```
+```json
 POST /api/omni/image
 Content-Type: multipart/form-data
 
@@ -57,7 +57,7 @@ Response:
 ```
 
 ### Audio Processing
-```
+```json
 POST /api/omni/audio
 Content-Type: audio/wav
 
@@ -73,7 +73,7 @@ Response:
 ```
 
 ### Multimodal Processing
-```
+```json
 POST /api/omni/multimodal
 Content-Type: application/json
 
@@ -178,7 +178,7 @@ def test_home_assistant_integration():
 ## 📊 Monitoring
 
 ### Health Checks
-```
+```json
 GET /api/omni/health
 
 Response:
